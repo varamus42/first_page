@@ -117,7 +117,7 @@
         .player-badge {
             background: linear-gradient(135deg, #d4af37 0%, #ffd700 100%);
             color: #0d3b2b;
-            padding: 15px;
+            padding: 10px;
             border-radius: 8px;
             text-align: center;
             font-weight: bold;
@@ -125,22 +125,23 @@
             cursor: pointer;
             transition: all 0.3s ease;
             position: relative;
+            min-width: 120px;
         }
         .player-badge:hover {
             transform: scale(1.05);
             box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
         }
         .player-badge .badge-name {
-            font-size: 16px;
-            margin-bottom: 8px;
+            font-size: 14px;
+            margin-bottom: 6px;
         }
         .player-badge .badge-value {
-            font-size: 14px;
+            font-size: 12px;
             font-weight: bold;
         }
         .player-badge .add-chips-hint {
-            font-size: 12px;
-            margin-top: 8px;
+            font-size: 10px;
+            margin-top: 6px;
             opacity: 0.8;
         }
         .modal {
@@ -213,6 +214,24 @@
         }
         .modal-buttons .cancel-btn:hover {
             background: #c0392b;
+        }
+        .mode-btn {
+            flex: 1;
+            padding: 8px 12px;
+            border: 2px solid #d4af37;
+            background: white;
+            color: #0d3b2b;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        .mode-btn.active {
+            background: #d4af37;
+            color: #0d3b2b;
+        }
+        .mode-btn:hover {
+            background: #f4c842;
         }
         .start-game-btn {
             display: block;
@@ -388,13 +407,16 @@
             <div class="chip-definition">
                 <h3>Chip Definition</h3>
                 <div class="chip-input-group">
+                    <label for="totalBuyInAmount">Value of Buy-in Chips $:</label>
+                    <input type="number" id="totalBuyInAmount" placeholder="e.g., 10" min="1" max="100" value="100" oninput="updateChipDefinition()">
+                </div>
+                <div class="chip-input-group">
                     <label for="chipValue">Starting Chips per Player:</label>
-                    <input type="number" id="chipValue" placeholder="e.g., 1000" min="1" max="100000" value="1000">
-                    <button onclick="setChipValue()">Set Chips</button>
+                    <input type="number" id="chipValue" placeholder="e.g., 1000" min="1" max="100000" value="1000" oninput="updateChipDefinition()">
                 </div>
                 <p id="chipDisplay" style="text-align: center; color: #e74c3c; font-weight: bold; margin-top: 10px;">⚠️ Please define chips before adding players</p>
             </div>
-            <p style="margin-top: 20px;">Enter player names (chips will be auto-assigned):</p>
+            <p style="margin-top: 20px;">Enter player names (chips and buy-in $ will be auto-assigned):</p>
             <div class="input-group" id="playerInputGroup" style="opacity: 0.5; pointer-events: none;">
                 <input type="text" id="playerName" placeholder="Player name" maxlength="50" disabled>
                 <button onclick="addPlayer()">Add</button>
@@ -433,6 +455,28 @@
                 <h3>Total Chips in Play: <span id="totalChips">0</span></h3>
             </div>
 
+            <!-- Transaction Log -->
+            <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin: 20px 0; border: 2px solid #d4af37;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <h3 style="color: #333; margin: 0;">📋 Transaction Log</h3>
+                    <button onclick="toggleTransactionLog()" id="logToggleBtn" style="background: #d4af37; color: #0d3b2b; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;">▼ Hide</button>
+                </div>
+                <div id="transactionLogContainer" style="max-height: 200px; overflow-y: auto; background: white; border: 1px solid #e0e0e0; border-radius: 5px; padding: 10px;">
+                    <div id="transactionLog">
+                        <p style="color: #999; text-align: center; margin: 0;">No transactions yet</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settlement Summary -->
+            <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin: 20px 0; border: 2px solid #d4af37;">
+                <h3 style="color: #333; margin-bottom: 10px;">💰 Game Summary</h3>
+                <button onclick="showGameSummary()" style="background: #2ecc71; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold;">📊 Show Summary</button>
+                <div id="settlementSummary" style="margin-top: 15px; display: none;">
+                    <!-- Settlement results will be displayed here -->
+                </div>
+            </div>
+
             <p style="text-align: center; color: #666; margin: 20px 0;">Good luck! May the best player win! 🃏</p>
         </div>
     </div>
@@ -440,12 +484,16 @@
     <!-- Modal for Adding Chips to Player -->
     <div id="addChipsModal" class="modal">
         <div class="modal-content">
-            <h2>💵 Add Chips to <span id="modalPlayerName"></span></h2>
+            <h2 id="modalTitle">💵 Manage Chips for <span id="modalPlayerName"></span></h2>
+            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                <button onclick="setModalMode('add')" id="addModeBtn" class="mode-btn active">Borrow Chips</button>
+                <button onclick="setModalMode('return')" id="returnModeBtn" class="mode-btn">Return Chips</button>
+            </div>
             <div class="input-group">
-                <input type="number" id="modalChipsAmount" placeholder="Enter chips to add" min="1" max="10000" readonly>
+                <input type="number" id="modalChipsAmount" placeholder="Enter chips amount" min="1" max="10000">
             </div>
             <div class="modal-buttons">
-                <button class="confirm-btn" onclick="confirmAddChips()">Add Chips</button>
+                <button class="confirm-btn" onclick="confirmChipTransaction()" id="confirmBtn">Borrow Chips</button>
                 <button class="cancel-btn" onclick="closeModal()">Cancel</button>
             </div>
         </div>
@@ -455,8 +503,12 @@
         let gameName = '';
         let players = [];
         let chipValue = 0;  // Set to 0 to make chip definition mandatory
+        let totalBuyInAmount = 0;  // Total $ buy-in per player
         let selectedPlayerForChips = '';
         let gameStarted = false;  // Track if game has started
+        let transactionLog = [];  // Track all chip transactions
+        let modalMode = 'add';  // 'add' or 'return'
+        let settlementMode = false;  // Track if settlement calculation is active
 
         // Save game state to localStorage
         function saveGameState() {
@@ -464,7 +516,9 @@
                 gameName: gameName,
                 players: players,
                 chipValue: chipValue,
-                gameStarted: gameStarted
+                totalBuyInAmount: totalBuyInAmount,
+                gameStarted: gameStarted,
+                transactionLog: transactionLog
             };
             localStorage.setItem('pokerGameState', JSON.stringify(gameState));
         }
@@ -477,8 +531,16 @@
                     const gameState = JSON.parse(saved);
                     gameName = gameState.gameName || '';
                     players = gameState.players || [];
+                    // Ensure backward compatibility - add buyInAmount if missing
+                    players = players.map(player => ({
+                        name: player.name,
+                        value: player.value,
+                        buyInAmount: player.buyInAmount || 0
+                    }));
                     chipValue = gameState.chipValue || 0;
+                    totalBuyInAmount = gameState.totalBuyInAmount || gameState.chipDollarValue * (gameState.chipValue || 0) || 0; // Backward compatibility
                     gameStarted = gameState.gameStarted || false;
+                    transactionLog = gameState.transactionLog || [];
                     return true;
                 } catch (e) {
                     console.error('Error loading game state:', e);
@@ -499,7 +561,9 @@
                 gameName: gameName,
                 players: players,
                 chipValue: chipValue,
-                gameStarted: gameStarted
+                totalBuyInAmount: totalBuyInAmount,
+                gameStarted: gameStarted,
+                transactionLog: transactionLog
             };
             return btoa(JSON.stringify(gameState));
         }
@@ -513,8 +577,16 @@
                     const gameState = JSON.parse(atob(encoded));
                     gameName = gameState.gameName || '';
                     players = gameState.players || [];
+                    // Ensure backward compatibility - add buyInAmount if missing
+                    players = players.map(player => ({
+                        name: player.name,
+                        value: player.value,
+                        buyInAmount: player.buyInAmount || 0
+                    }));
                     chipValue = gameState.chipValue || 0;
+                    totalBuyInAmount = gameState.totalBuyInAmount || gameState.chipDollarValue * (gameState.chipValue || 0) || 0; // Backward compatibility
                     gameStarted = gameState.gameStarted || false;
+                    transactionLog = gameState.transactionLog || [];
                     return true;
                 } catch (e) {
                     console.error('Error decoding game state from URL:', e);
@@ -544,14 +616,27 @@
             return params.get('name');
         }
 
-        function setChipValue() {
-            const input = document.getElementById('chipValue').value.trim();
-            if (input === '' || input < 1) {
-                alert('Please enter a valid chip value!');
+        function updateChipDefinition() {
+            const chipsInput = document.getElementById('chipValue').value.trim();
+            const buyInInput = document.getElementById('totalBuyInAmount').value.trim();
+            
+            if (chipsInput === '' || chipsInput < 1 || buyInInput === '' || buyInInput < 0.01) {
+                document.getElementById('chipDisplay').textContent = '⚠️ Please define chips before adding players';
+                chipValue = 0;
+                totalBuyInAmount = 0;
+                // Disable player input
+                const playerInputGroup = document.getElementById('playerInputGroup');
+                playerInputGroup.style.opacity = '0.5';
+                playerInputGroup.style.pointerEvents = 'none';
+                document.getElementById('playerName').disabled = true;
                 return;
             }
-            chipValue = parseInt(input);
-            document.getElementById('chipDisplay').textContent = `Chips per player: ${chipValue}`;
+            
+            chipValue = parseInt(chipsInput);
+            totalBuyInAmount = parseFloat(buyInInput);
+            
+            const dollarPerChip = totalBuyInAmount / chipValue;
+            document.getElementById('chipDisplay').textContent = `Each player gets ${chipValue} chips ($${dollarPerChip.toFixed(2)} each) = $${totalBuyInAmount.toFixed(2)} buy-in`;
             
             // Enable player input section
             const playerInputGroup = document.getElementById('playerInputGroup');
@@ -585,18 +670,21 @@
             
             document.getElementById('gameTitle').textContent = gameName;
             document.getElementById('chipValue').value = chipValue;
+            document.getElementById('totalBuyInAmount').value = totalBuyInAmount.toFixed(2);
             
             // Restore UI state based on whether game started
             if (gameStarted) {
                 document.getElementById('addPlayersSection').style.display = 'none';
                 document.getElementById('gameRunningSection').style.display = 'block';
                 displayActivePlayers();
+                displayTransactionLog();
             } else {
                 document.getElementById('addPlayersSection').style.display = 'block';
                 document.getElementById('gameRunningSection').style.display = 'none';
                 
                 if (chipValue > 0) {
-                    document.getElementById('chipDisplay').textContent = `Chips per player: ${chipValue}`;
+                    const dollarPerChip = totalBuyInAmount / chipValue;
+                    document.getElementById('chipDisplay').textContent = `Each player gets ${chipValue} chips ($${dollarPerChip.toFixed(2)} each) = $${totalBuyInAmount.toFixed(2)} buy-in`;
                     const playerInputGroup = document.getElementById('playerInputGroup');
                     playerInputGroup.style.opacity = '1';
                     playerInputGroup.style.pointerEvents = 'auto';
@@ -632,13 +720,20 @@
             
             players.push({
                 name: playerName,
-                value: chipValue
+                value: -chipValue, // Negative - player owes these chips to house
+                buyInAmount: totalBuyInAmount
             });
             
             document.getElementById('playerName').value = '';
             document.getElementById('playerName').focus();
             updatePlayersList();
             updateStartButton();
+            
+            // Log buy-in transaction (negative for money spent)
+            if (totalBuyInAmount > 0) {
+                addToTransactionLog(`${playerName} (buy-in)`, -totalBuyInAmount, 'buyin');
+            }
+            
             saveGameState();
         }
 
@@ -659,7 +754,8 @@
                 playerItem.innerHTML = `
                     <div class="player-info">
                         <span class="player-name">${player.name}</span>
-                        <span class="player-value">${player.value}</span>
+                        <span class="player-value">${player.value} chips</span>
+                        <span class="player-value">$${player.buyInAmount.toFixed(2)}</span>
                     </div>
                     <button onclick="removePlayer('${player.name}')">Remove</button>
                 `;
@@ -700,14 +796,15 @@
             
             players.push({
                 name: playerName,
-                value: chipValue
+                value: -chipValue, // Negative - player owes chips to house
+                buyInAmount: totalBuyInAmount  // Auto-calculate buy-in for late joiners
             });
             
             document.getElementById('gamePlayerName').value = '';
             
             // Show success message
             const messageEl = document.getElementById('gamePlayerMessage');
-            messageEl.textContent = `✅ ${playerName} joined the game with ${chipValue} chips!`;
+            messageEl.textContent = `✅ ${playerName} joined the game with -${chipValue} chips (owes $${totalBuyInAmount.toFixed(2)} to house)!`;
             messageEl.style.display = 'block';
             messageEl.style.color = '#27ae60';
             
@@ -715,9 +812,12 @@
                 messageEl.style.display = 'none';
             }, 3000);
             
+            // Add to transaction log
+            addToTransactionLog(`${playerName} (joined)`, -chipValue, 'chips'); // Negative since they owe chips to house
+            addToTransactionLog(`${playerName} (buy-in)`, -totalBuyInAmount, 'buyin');
+            
             // Update display
             displayActivePlayers();
-            saveGameState();
         }
 
 
@@ -734,19 +834,37 @@ function displayActivePlayers() {
                 badge.onclick = () => openAddChipsModal(player.name);
                 const chipValue = parseInt(player.value);
                 totalChips += chipValue;
+                
+                // Style negative chip counts in red
+                const chipDisplay = chipValue < 0 ? 
+                    `<span style="color: #e74c3c; font-weight: bold;">${player.value}</span>` : 
+                    player.value;
+                
                 badge.innerHTML = `
                     <div class="badge-name">${player.name}</div>
-                    <div class="badge-value">💰 ${player.value} Chips</div>
-                    <div class="add-chips-hint">Click to add chips 📍</div>
+                    <div class="badge-value">💰 ${chipDisplay} Chips</div>
+                    <div class="add-chips-hint">Click to manage chips 📍</div>
                 `;
                 playersDisplay.appendChild(badge);
             });
             
             document.getElementById('totalChips').textContent = totalChips;
+            
+            // Style total chips display for negative values
+            const totalChipsElement = document.getElementById('totalChips');
+            if (totalChips < 0) {
+                totalChipsElement.style.color = '#e74c3c';
+                totalChipsElement.style.fontWeight = 'bold';
+            } else {
+                totalChipsElement.style.color = '';
+                totalChipsElement.style.fontWeight = '';
+            }
         }
 
         function openAddChipsModal(playerName) {
             selectedPlayerForChips = playerName;
+            modalMode = 'add';  // Default to add mode
+            updateModalDisplay();
             document.getElementById('modalPlayerName').textContent = playerName;
             document.getElementById('modalChipsAmount').value = chipValue;
             document.getElementById('addChipsModal').classList.add('show');
@@ -756,27 +874,137 @@ function displayActivePlayers() {
         function closeModal() {
             document.getElementById('addChipsModal').classList.remove('show');
             selectedPlayerForChips = '';
+            modalMode = 'add';  // Reset to default
         }
 
-        function confirmAddChips() {
-            const chipsToAdd = document.getElementById('modalChipsAmount').value.trim();
+        function setModalMode(mode) {
+            modalMode = mode;
+            updateModalDisplay();
+        }
+
+        function updateModalDisplay() {
+            const title = document.getElementById('modalTitle');
+            const addBtn = document.getElementById('addModeBtn');
+            const returnBtn = document.getElementById('returnModeBtn');
+            const confirmBtn = document.getElementById('confirmBtn');
+            const input = document.getElementById('modalChipsAmount');
             
-            if (chipsToAdd === '' || chipsToAdd < 1) {
-                alert('Please enter a valid chip amount!');
+            if (modalMode === 'add') {
+                title.innerHTML = '💵 Borrow Chips for <span id="modalPlayerName"></span>';
+                addBtn.classList.add('active');
+                returnBtn.classList.remove('active');
+                confirmBtn.textContent = 'Borrow Chips';
+                input.placeholder = 'Enter chips to borrow';
+                input.min = '1';
+                input.max = '10000';
+            } else {
+                title.innerHTML = '💰 Return Chips from <span id="modalPlayerName"></span>';
+                returnBtn.classList.add('active');
+                addBtn.classList.remove('active');
+                confirmBtn.textContent = 'Return Chips';
+                input.placeholder = 'Enter chips to return';
+                input.min = '0';  // Allow zero for return mode
+                input.max = '';  // Allow returning more than player has
+            }
+            
+            document.getElementById('modalPlayerName').textContent = selectedPlayerForChips;
+        }
+
+        function confirmChipTransaction() {
+            const chipsAmount = document.getElementById('modalChipsAmount').value.trim();
+            
+            // Allow zero for return mode, but require positive for add mode
+            const minAmount = modalMode === 'return' ? 0 : 1;
+            if (chipsAmount === '' || chipsAmount < minAmount) {
+                const modeText = modalMode === 'return' ? 'return' : 'borrow';
+                alert(`Please enter a valid chip amount to ${modeText}!`);
                 return;
             }
             
             const player = players.find(p => p.name === selectedPlayerForChips);
             if (player) {
-                const addedChips = parseInt(chipsToAdd);
-                player.value = parseInt(player.value) + addedChips;
+                const chipsChange = parseInt(chipsAmount);
+                
+                if (modalMode === 'add') {
+                    player.value = parseInt(player.value) - chipsChange; // Player owes more to house
+                    addToTransactionLog(selectedPlayerForChips, -chipsChange, 'chips'); // Negative transaction
+                } else if (modalMode === 'return') {
+                    player.value = parseInt(player.value) + chipsChange; // Positive return reduces debt
+                    addToTransactionLog(`${selectedPlayerForChips} (returned)`, chipsChange, 'chips');
+                }
                 
                 // Close modal
                 closeModal();
                 
                 // Update displays
                 displayActivePlayers();
-                saveGameState();
+            }
+        }
+
+        function addToTransactionLog(playerName, amount, type = 'chips') {
+            const now = new Date();
+            const timestamp = now.toLocaleTimeString('en-US', { 
+                hour: '2-digit', 
+                minute: '2-digit', 
+                second: '2-digit',
+                hour12: true
+            });
+            
+            transactionLog.push({
+                playerName: playerName,
+                amount: amount,
+                type: type,
+                timestamp: timestamp
+            });
+            
+            displayTransactionLog();
+            saveGameState();
+        }
+
+        function displayTransactionLog() {
+            const logContainer = document.getElementById('transactionLog');
+            
+            if (transactionLog.length === 0) {
+                logContainer.innerHTML = '<p style="color: #999; text-align: center; margin: 0;">No transactions yet</p>';
+                return;
+            }
+            
+            logContainer.innerHTML = '';
+            // Display in descending order (newest first)
+            const reversedLog = [...transactionLog].reverse();
+            reversedLog.forEach(transaction => {
+                const logEntry = document.createElement('div');
+                logEntry.style.cssText = 'padding: 8px; border-bottom: 1px solid #e0e0e0; display: flex; justify-content: space-between; align-items: center; font-size: 14px;';
+                
+                let amountText = '';
+                const type = transaction.type || 'chips';
+                const amount = transaction.amount !== undefined ? transaction.amount : transaction.chipsAdded;
+                
+                if (type === 'buyin') {
+                    amountText = `<strong style="color: #2ecc71;">$${amount.toFixed(2)} buy-in</strong>`;
+                } else {
+                    const sign = amount > 0 ? '+' : '';
+                    amountText = `<strong style="color: #2ecc71;">${sign}${amount} chips</strong>`;
+                }
+                
+                logEntry.innerHTML = `
+                    <span><strong>${transaction.playerName}</strong> ${amountText}</span>
+                    <span style="color: #999; font-size: 12px;">${transaction.timestamp}</span>
+                `;
+                logContainer.appendChild(logEntry);
+            });
+        }
+
+        function toggleTransactionLog() {
+            const container = document.getElementById('transactionLogContainer');
+            const button = document.getElementById('logToggleBtn');
+            
+            if (container.style.display === 'none') {
+                container.style.display = 'block';
+                button.textContent = '▼ Hide';
+            } else {
+                container.style.display = 'none';
+                button.textContent = '▶ Show';
             }
         }
 
@@ -786,6 +1014,166 @@ function displayActivePlayers() {
                 clearGameState();
                 window.location.href = 'index.html';
             }
+        }
+
+        // Calculate settlements between players
+        function calculateSettlements() {
+            const settlements = [];
+            const playerBalances = {};
+            
+            // Calculate $ per chip
+            const dollarPerChip = totalBuyInAmount / chipValue;
+            
+            // Calculate each player's net $ position
+            // Since players start with negative chips (debt), positive chips = profit, negative chips = remaining debt
+            players.forEach(player => {
+                const currentChipValue = parseInt(player.value);
+                const netAmount = currentChipValue * dollarPerChip;
+                playerBalances[player.name] = netAmount;
+            });
+            
+            // Find who owes whom
+            const creditors = [];
+            const debtors = [];
+            
+            Object.entries(playerBalances).forEach(([name, balance]) => {
+                if (balance > 0) {
+                    creditors.push({ name, amount: balance });
+                } else if (balance < 0) {
+                    debtors.push({ name, amount: Math.abs(balance) });
+                }
+            });
+            
+            // Sort by amount (largest first)
+            creditors.sort((a, b) => b.amount - a.amount);
+            debtors.sort((a, b) => b.amount - a.amount);
+            
+            // Calculate optimal settlements
+            let creditorIndex = 0;
+            let debtorIndex = 0;
+            
+            while (creditorIndex < creditors.length && debtorIndex < debtors.length) {
+                const creditor = creditors[creditorIndex];
+                const debtor = debtors[debtorIndex];
+                
+                const settlementAmount = Math.min(creditor.amount, debtor.amount);
+                
+                if (settlementAmount > 0) {
+                    settlements.push({
+                        from: debtor.name,
+                        to: creditor.name,
+                        amount: settlementAmount
+                    });
+                }
+                
+                creditor.amount -= settlementAmount;
+                debtor.amount -= settlementAmount;
+                
+                if (creditor.amount === 0) creditorIndex++;
+                if (debtor.amount === 0) debtorIndex++;
+            }
+            
+            return settlements;
+        }
+
+        // Show game summary
+        function showGameSummary() {
+            const summaryDiv = document.getElementById('settlementSummary');
+            
+            // Calculate $ per chip
+            const dollarPerChip = totalBuyInAmount / chipValue;
+
+            let html = '<h4 style="color: #0d3b2b; margin-bottom: 15px;">💰 Final Settlements</h4>';
+
+            // Show settlement details - player to player transfers
+            const settlements = calculateSettlements();
+            
+            html += '<div style="background: white; padding: 15px; border-radius: 5px; border: 1px solid #e0e0e0; margin-bottom: 15px;">';
+            html += '<h5 style="color: #0d3b2b; margin-bottom: 10px;">🏆 Player Rankings</h5>';
+            
+            // Sort players by final chip position (positive first, then by amount)
+            const rankedPlayers = [...players].sort((a, b) => {
+                const aChips = parseInt(a.value);
+                const bChips = parseInt(b.value);
+                const aDollar = aChips * dollarPerChip;
+                const bDollar = bChips * dollarPerChip;
+                
+                // Sort by dollar amount (descending)
+                return bDollar - aDollar;
+            });
+            
+            rankedPlayers.forEach((player, index) => {
+                const currentChips = parseInt(player.value);
+                const dollarValue = currentChips * dollarPerChip;
+                const rank = index + 1;
+                
+                let rankIcon = '🥉';
+                if (rank === 1) rankIcon = '🥇';
+                else if (rank === 2) rankIcon = '🥈';
+                
+                const chipStyle = currentChips < 0 ? 'color: #e74c3c; font-weight: bold;' : '';
+                const dollarStyle = dollarValue >= 0 ? 'color: #27ae60;' : 'color: #e74c3c;';
+                
+                html += `<div style="margin: 8px 0; padding: 10px; background: #f9f9f9; border-radius: 3px; border-left: 4px solid ${rank <= 3 ? '#d4af37' : '#ddd'};">`;
+                html += `<div style="display: flex; justify-content: space-between; align-items: center;">`;
+                html += `<span style="font-size: 18px;">${rankIcon}</span>`;
+                html += `<span style="font-weight: bold; flex: 1; margin-left: 10px;">${player.name}</span>`;
+                html += `<span style="text-align: right; ${chipStyle}">${currentChips} chips</span>`;
+                html += `<span style="text-align: right; margin-left: 15px; font-weight: bold; ${dollarStyle}">$${dollarValue.toFixed(2)}</span>`;
+                html += `</div>`;
+                html += `</div>`;
+            });
+            
+            html += '</div>';
+            
+            html += '<div style="background: white; padding: 15px; border-radius: 5px; border: 1px solid #e0e0e0; margin-bottom: 15px;">';
+            html += '<h5 style="color: #0d3b2b; margin-bottom: 10px;">💰 Player-to-Player Settlements</h5>';
+            
+            if (settlements.length === 0) {
+                html += '<p style="color: #27ae60; margin: 10px 0;">✅ All accounts are settled! No transfers needed.</p>';
+            } else {
+                html += '<div style="background: #f9f9f9; padding: 10px; border-radius: 5px; border: 1px solid #e0e0e0;">';
+                
+                settlements.forEach(settlement => {
+                    html += `<div style="margin: 8px 0; padding: 8px; background: white; border-radius: 3px; border-left: 4px solid #d4af37;">`;
+                    html += `<strong>${settlement.from}</strong> owes <strong style="color: #d4af37;">$${settlement.amount.toFixed(2)}</strong> to <strong>${settlement.to}</strong>`;
+                    html += `</div>`;
+                });
+                
+                html += '</div>';
+                html += '<p style="color: #666; font-size: 12px; margin-top: 10px;">These transfers will settle all accounts between players.</p>';
+            }
+            
+            html += '</div>';
+
+            // Overall totals
+            let totalChipsInPlay = 0;
+            let totalBuyIn = 0;
+            
+            players.forEach(player => {
+                totalChipsInPlay += parseInt(player.value);
+                totalBuyIn += player.buyInAmount;
+            });
+            
+            // Check if chips balance to zero before showing detailed summary
+            if (totalChipsInPlay !== 0) {
+                let html = '<h4 style="color: #0d3b2b; margin-bottom: 15px;">⚠️ Cannot Show Final Distribution</h4>';
+                html += '<div style="background: #ffe6e6; border: 2px solid #e74c3c; padding: 20px; border-radius: 5px;">';
+                html += '<h5 style="color: #e74c3c; margin-bottom: 10px;">Chips Must Balance to Zero</h5>';
+                html += `<p style="color: #333; margin: 10px 0;">Current total chips in play: <strong style="font-size: 18px;">${totalChipsInPlay}</strong></p>`;
+                html += '<p style="color: #666; margin: 10px 0;">The total chips in play must equal zero before showing the final distribution. This ensures all transactions are properly balanced.</p>';
+                html += '<p style="color: #666; margin: 10px 0; font-size: 14px;">💡 Use the chip management modal to borrow or return chips until the total reaches zero.</p>';
+                html += '</div>';
+                
+                summaryDiv.innerHTML = html;
+                summaryDiv.style.display = 'block';
+                return; // Exit function early
+            }
+            
+            html += `<p style="margin-top: 10px; font-size: 12px; color: #666;">💡 Each chip is worth $${dollarPerChip.toFixed(4)} | Players started with -${chipValue} chips (owed to house)</p>`;
+
+            summaryDiv.innerHTML = html;
+            summaryDiv.style.display = 'block';
         }
 
         // Initialize page on load
