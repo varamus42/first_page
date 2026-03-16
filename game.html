@@ -433,14 +433,6 @@
                 <h3>Total Chips in Play: <span id="totalChips">0</span></h3>
             </div>
 
-            <!-- Transaction Log -->
-            <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin: 20px 0; border: 2px solid #d4af37;">
-                <h3 style="color: #333; margin-bottom: 10px;">📋 Transaction Log</h3>
-                <div id="transactionLog" style="max-height: 200px; overflow-y: auto; background: white; border: 1px solid #e0e0e0; border-radius: 5px; padding: 10px;">
-                    <p style="color: #999; text-align: center; margin: 0;">No transactions yet</p>
-                </div>
-            </div>
-
             <p style="text-align: center; color: #666; margin: 20px 0;">Good luck! May the best player win! 🃏</p>
         </div>
     </div>
@@ -465,7 +457,6 @@
         let chipValue = 0;  // Set to 0 to make chip definition mandatory
         let selectedPlayerForChips = '';
         let gameStarted = false;  // Track if game has started
-        let transactionLog = [];  // Track all chip transactions
 
         // Save game state to localStorage
         function saveGameState() {
@@ -473,8 +464,7 @@
                 gameName: gameName,
                 players: players,
                 chipValue: chipValue,
-                gameStarted: gameStarted,
-                transactionLog: transactionLog
+                gameStarted: gameStarted
             };
             localStorage.setItem('pokerGameState', JSON.stringify(gameState));
         }
@@ -489,7 +479,6 @@
                     players = gameState.players || [];
                     chipValue = gameState.chipValue || 0;
                     gameStarted = gameState.gameStarted || false;
-                    transactionLog = gameState.transactionLog || [];
                     return true;
                 } catch (e) {
                     console.error('Error loading game state:', e);
@@ -526,7 +515,6 @@
                     players = gameState.players || [];
                     chipValue = gameState.chipValue || 0;
                     gameStarted = gameState.gameStarted || false;
-                    transactionLog = gameState.transactionLog || [];
                     return true;
                 } catch (e) {
                     console.error('Error decoding game state from URL:', e);
@@ -603,7 +591,6 @@
                 document.getElementById('addPlayersSection').style.display = 'none';
                 document.getElementById('gameRunningSection').style.display = 'block';
                 displayActivePlayers();
-                displayTransactionLog();
             } else {
                 document.getElementById('addPlayersSection').style.display = 'block';
                 document.getElementById('gameRunningSection').style.display = 'none';
@@ -784,56 +771,13 @@ function displayActivePlayers() {
                 const addedChips = parseInt(chipsToAdd);
                 player.value = parseInt(player.value) + addedChips;
                 
-                // Add to transaction log
-                addToTransactionLog(selectedPlayerForChips, addedChips);
-                
                 // Close modal
                 closeModal();
                 
                 // Update displays
                 displayActivePlayers();
+                saveGameState();
             }
-        }
-
-        function addToTransactionLog(playerName, chipsAdded) {
-            const now = new Date();
-            const timestamp = now.toLocaleTimeString('en-US', { 
-                hour: '2-digit', 
-                minute: '2-digit', 
-                second: '2-digit',
-                hour12: true
-            });
-            
-            transactionLog.push({
-                playerName: playerName,
-                chipsAdded: chipsAdded,
-                timestamp: timestamp
-            });
-            
-            displayTransactionLog();
-            saveGameState();
-        }
-
-        function displayTransactionLog() {
-            const logContainer = document.getElementById('transactionLog');
-            
-            if (transactionLog.length === 0) {
-                logContainer.innerHTML = '<p style="color: #999; text-align: center; margin: 0;">No transactions yet</p>';
-                return;
-            }
-            
-            logContainer.innerHTML = '';
-            // Display in descending order (newest first)
-            const reversedLog = [...transactionLog].reverse();
-            reversedLog.forEach(transaction => {
-                const logEntry = document.createElement('div');
-                logEntry.style.cssText = 'padding: 8px; border-bottom: 1px solid #e0e0e0; display: flex; justify-content: space-between; align-items: center; font-size: 14px;';
-                logEntry.innerHTML = `
-                    <span><strong>${transaction.playerName}</strong> added <strong style="color: #2ecc71;">${transaction.chipsAdded} chips</strong></span>
-                    <span style="color: #999; font-size: 12px;">${transaction.timestamp}</span>
-                `;
-                logContainer.appendChild(logEntry);
-            });
         }
 
         function goHome() {

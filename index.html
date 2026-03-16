@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎰 Poker Chip Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Georgia', serif;
+            background: linear-gradient(135deg, #0d3b2b 0%, #1a5c3a 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            max-width: 500px;
+            text-align: center;
+            border: 3px solid #d4af37;
+        }
+
+        h1 {
+            color: #0d3b2b;
+            margin-bottom: 10px;
+            font-size: 36px;
+            letter-spacing: 2px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 16px;
+            font-style: italic;
+        }
+
+        .input-group {
+            margin: 30px 0;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #1a5c3a;
+            border-radius: 8px;
+            font-size: 16px;
+            font-family: 'Georgia', serif;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #d4af37;
+            box-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        button {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-family: 'Georgia', serif;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        .create-btn {
+            background: linear-gradient(135deg, #d4af37 0%, #ffd700 100%);
+            color: #0d3b2b;
+        }
+
+        .create-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(212, 175, 55, 0.4);
+        }
+
+        .create-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .footer {
+            color: #999;
+            margin-top: 20px;
+            font-size: 14px;
+        }
+
+        .poker-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="poker-icon">🎰</div>
+        <h1>Poker Chip Tracker</h1>
+        <p class="subtitle">Manage your poker game like a pro</p>
+        
+        <div class="input-group">
+            <input type="text" id="gameName" placeholder="Enter game name" maxlength="50">
+        </div>
+
+        <div class="button-group">
+            <button class="create-btn" onclick="createGame()">🎲 Start Game</button>
+        </div>
+
+        <p class="footer">Track chips, manage players, and share your game session</p>
+    </div>
+
+    <script>
+        function createGame() {
+            const gameName = document.getElementById('gameName').value.trim();
+            
+            if (gameName === '') {
+                alert('Please enter a game name!');
+                return;
+            }
+            
+            // Navigate to game.html with game name as parameter
+            window.location.href = `game.html?name=${encodeURIComponent(gameName)}`;
+        }
+
+        // Allow Enter key to create game
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('gameName').addEventListener('keypress', function(event) {
+                if (event.key === 'Enter') {
+                    createGame();
+                }
+            });
+            
+            document.getElementById('gameName').focus();
+        });
+    </script>
+</body>
+</html>
