@@ -31,9 +31,9 @@
         .game-header {
             background: linear-gradient(135deg, #d4af37 0%, #ffd700 50%, #d4af37 100%);
             color: #0d3b2b;
-            padding: 20px;
+            padding: 10px;
             border-radius: 8px;
-            margin-bottom: 30px;
+            margin-bottom: 10px;
             text-align: center;
             border: 3px solid #c4932b;
         }
@@ -67,6 +67,7 @@
             gap: 10px;
             align-items: center;
             margin-bottom: 10px;
+            flex-wrap: wrap;
         }
         .chip-input-group label {
             color: #0d3b2b;
@@ -79,6 +80,7 @@
             border-radius: 4px;
             font-size: 14px;
             width: 80px;
+            min-width: 0;
         }
         .chip-input-group button {
             padding: 8px 15px;
@@ -277,6 +279,7 @@
             display: flex;
             gap: 10px;
             margin-bottom: 20px;
+            flex-wrap: wrap;
         }
         .input-group input {
             padding: 12px;
@@ -284,6 +287,7 @@
             border-radius: 5px;
             font-size: 16px;
             transition: border-color 0.3s ease;
+            min-width: 0;
         }
         .input-group input:first-of-type {
             flex: 2;
@@ -372,9 +376,9 @@
         }
         .home-button {
             position: absolute;
-            top: 20px;
-            right: 20px;
-            padding: 10px 20px;
+            top: 10px;
+            right: 10px;
+            padding: 10px 10px;
             background: #3498db;
             color: white;
             border: none;
@@ -389,11 +393,36 @@
         .home-button:hover {
             background: #2980b9;
         }
+        @media (max-width: 640px) {
+            .chip-input-group,
+            .input-group {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .chip-input-group label {
+                min-width: auto;
+                width: 100%;
+            }
+            .chip-input-group input,
+            .input-group input,
+            .input-group button {
+                width: 100%;
+            }
+            .input-group button {
+                padding: 12px;
+            }
+            .current-players,
+            .chip-definition,
+            .modal-content,
+            .container {
+                padding: 20px;
+            }
+        }
     </style>
 </head>
 <body>
     <button class="home-button" onclick="goHome()">🏠</button>
-    <button class="home-button" onclick="shareGame()" style="right: 80px;">📤</button>
+    <button class="home-button" onclick="shareGame()" style="right: 50px;">📤</button>
     <div class="container">
         <!-- Game Header with Game Name -->
         <div class="game-header">
@@ -981,7 +1010,7 @@ function displayActivePlayers() {
                 const amount = transaction.amount !== undefined ? transaction.amount : transaction.chipsAdded;
                 
                 if (type === 'buyin') {
-                    amountText = `<strong style="color: #2ecc71;">$${amount.toFixed(2)} buy-in</strong>`;
+                    amountText = `<strong style="color: #2ecc71; font-size: 10px;">$${amount.toFixed(2)} buy-in</strong>`;
                 } else {
                     const sign = amount > 0 ? '+' : '';
                     amountText = `<strong style="color: #2ecc71;">${sign}${amount} chips</strong>`;
@@ -989,7 +1018,7 @@ function displayActivePlayers() {
                 
                 logEntry.innerHTML = `
                     <span><strong>${transaction.playerName}</strong> ${amountText}</span>
-                    <span style="color: #999; font-size: 12px;">${transaction.timestamp}</span>
+                    <span style="color: #999; font-size: 8px;">${transaction.timestamp}</span>
                 `;
                 logContainer.appendChild(logEntry);
             });
